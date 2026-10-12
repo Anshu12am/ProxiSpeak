@@ -7,22 +7,23 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-position: {
-      x: {
-        type: Number,
-        default: 0,
-      },
-      y: {
-        type: Number,
-        default: 0,
-      },
-    },
+  
+    location:{
+      type:[Number],
+      required: true,
+      default: [0, 0],
+    }
 
   },
    {
     timestamps: true,
   }
-)
+);
+
+userSchema.index(
+  { location: "2d" },
+  { min: 0, max: 10000 }
+);
 
 const User = mongoose.model("User", userSchema);
 
