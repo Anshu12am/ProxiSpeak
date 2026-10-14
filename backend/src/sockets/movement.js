@@ -43,14 +43,23 @@ module.exports.registerMovementHandlers = (io) => {
        console.log(`Player ${socket.id} moved to (${x}, ${y})`);
     })
 
-     socket.on("disconnect",async () => {
-     try{
-      await User.findOneAndDelete({socketId: socket.id});
-      console.log(`User ${socket.id} disconnected and removed from database`);
-     }catch(err){
-      console.error("Error removing user from database:", err);
-     }
-    });
+   
+socket.on("disconnect", async () => {
+  try {
+    await User.findOneAndDelete({ socketId: socket.id });
+    console.log(`User ${socket.id} disconnected and removed from database`);
+  } catch (err) {
+    console.error("Error removing user from database:", err);
+  }
+
+  console.log("Broadcasting player:left for:", socket.id);
+  
+  // Notify other connected players
+  socket.broadcast.emit("player:left", {
+    socketId: socket.id,
+  });
+});
+
 
   })
-}
+} 
