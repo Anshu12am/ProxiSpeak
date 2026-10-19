@@ -1,5 +1,5 @@
-
 const User = require("../models/user.model");
+const { getNearbyUsers } = require("../services/proximityService");
 
 module.exports.registerMovementHandlers = (io) => {
   io.on("connection", (socket) => {
@@ -37,13 +37,29 @@ module.exports.registerMovementHandlers = (io) => {
         return;
       }
 
-      socket.broadcast.emit("player:moved", {
-        socketId: socket.id,
-        location: { x, y },
-      });
+      
+try {
+  const nearbyUsers = await getNearbyUsers({
+    x,
+    y,
+    radius: 100,
+    excludeSocketId: socket.id,
+  });
 
-      console.log(`Player ${socket.id} moved to (${x}, ${y})`);
+  for (const user of nearbyUsers) {
+    io.to(user.socketId).emit("player:moved", {
+      socketId: socket.id,
+      location: { x, y },
     });
+  }
+
+  console.log(
+    `Player ${socket.id} moved to (${x}, ${y}); notified ${nearbyUsers.length} nearby users`
+  );
+} catch (err) {
+  console.error("Error finding nearby users:", err);
+}
+
 
     socket.on("disconnect", async () => {
       try {
