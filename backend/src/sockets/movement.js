@@ -2,6 +2,9 @@ const User = require("../models/user.model");
 const { getNearbyUsers } = require("../services/proximityService");
 
 module.exports.registerMovementHandlers = (io) => {
+    // Last successfully processed position for each socket
+  const lastPositions = new Map();
+
   io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 
@@ -15,6 +18,13 @@ module.exports.registerMovementHandlers = (io) => {
         !Number.isFinite(x) ||
         !Number.isFinite(y)
       ) {
+        return;
+      }
+
+     const previous = lastPositions.get(socket.id);
+
+      if (previous && previous.x === x && previous.y === y) {
+        console.log("Unchanged position skipped:", socket.id);
         return;
       }
 
@@ -38,6 +48,7 @@ module.exports.registerMovementHandlers = (io) => {
       }
 
       
+
 try {
   const nearbyUsers = await getNearbyUsers({
     x,
@@ -53,6 +64,8 @@ try {
     });
   }
 
+  lastPositions.set(socket.id, { x, y });
+
   console.log(
     `Player ${socket.id} moved to (${x}, ${y}); notified ${nearbyUsers.length} nearby users`
   );
@@ -62,6 +75,7 @@ try {
 
 
     socket.on("disconnect", async () => {
+      lastPositions.delete(socket.id);
       try {
         await User.findOneAndDelete({ socketId: socket.id });
         console.log(
