@@ -72,18 +72,23 @@ try {
 } catch (err) {
   console.error("Error finding nearby users:", err);
 }
-
+});
 
     socket.on("disconnect", async () => {
       lastPositions.delete(socket.id);
       try {
-        await User.findOneAndDelete({ socketId: socket.id });
-        console.log(
-          `User ${socket.id} disconnected and removed from database`
-        );
-      } catch (err) {
-        console.error("Error removing user from database:", err);
-      }
+    const deletedUser = await User.findOneAndDelete({
+        socketId: socket.id
+    });
+
+    if (deletedUser) {
+        console.log("User removed from database:", socket.id);
+    } else {
+        console.log("No database record found for:", socket.id);
+    }
+} catch (err) {
+    console.error("Error removing user from database:", err);
+}
 
       // Notify other connected players
       socket.broadcast.emit("player:left", {
@@ -91,5 +96,5 @@ try {
       });
     });
   });
-});
+
 }
