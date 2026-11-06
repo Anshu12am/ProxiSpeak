@@ -15,6 +15,19 @@ module.exports.validateObstacles = (obstacles, roomWidth, roomHeight) => {
 
     for (const obstacle of obstacles) {
 
+         if (!obstacle || typeof obstacle !== "object") {
+            throw new Error("Invalid obstacle");
+        }
+
+        // Check coordinates and dimensions
+        if (!Number.isFinite(obstacle.x) || obstacle.x < 0 ||
+            !Number.isFinite(obstacle.y) || obstacle.y < 0 ||
+            !Number.isFinite(obstacle.width) || obstacle.width <= 0 ||
+            !Number.isFinite(obstacle.height) || obstacle.height <= 0) {
+
+            throw new Error("Invalid obstacle coordinates or dimensions");
+        }
+
         if (obstacle.x + obstacle.width > roomWidth) {
             throw new Error(
                 "Obstacle exceeds room width boundary"
